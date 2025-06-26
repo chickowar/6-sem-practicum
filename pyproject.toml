@@ -1,0 +1,28 @@
+[project]
+name = "videoanalysis"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "KruTimurch",email = "teisltvg@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy (>=2.3.1,<3.0.0)",
+    "fastapi (>=0.115.14,<0.116.0)",
+    "asyncio (>=3.4.3,<4.0.0)",
+    "aiokafka (>=0.12.0,<0.13.0)"
+]
+
+[tool.poetry]
+packages = [
+    {include = "videoanalysis", from = "src"},
+    {include = "orchestrator", from = "src"},
+    {include = "inference", from = "src"},
+    {include = "runner", from = "src"},
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
