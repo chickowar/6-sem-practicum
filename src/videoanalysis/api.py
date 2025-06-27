@@ -41,8 +41,13 @@ async def get_predictions(scenario_id: str) -> List[FramePrediction] | None:
             WHERE scenario_id = $1
             ORDER BY frame_number ASC
         """, scenario_id)
+
         return [
-            FramePrediction(frame_number=row["frame_number"], predictions=row["predictions"])
+            FramePrediction(
+                frame_number=row["frame_number"],
+                predictions=json.loads(row["predictions"]) if isinstance(row["predictions"], str) else row[
+                    "predictions"]
+            )
             for row in rows
         ]
     finally:

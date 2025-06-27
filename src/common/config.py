@@ -1,4 +1,4 @@
-KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+KAFKA_BOOTSTRAP_SERVERS = "localhost:29092" # ПРИ ЗАПУСКЕ С ДОКЕРА НУЖНО ДРУГОЕ!
 KAFKA_ORCHESTRATOR_COMMANDS_TOPIC = "orchestrator_commands"
 KAFKA_RUNNER_COMMANDS_TOPIC = "runner_commands"
 

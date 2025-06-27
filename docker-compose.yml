@@ -10,19 +10,26 @@ services:
       - "2181:2181"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - internal
 
   kafka:
     image: bitnami/kafka:3.6
     container_name: kafka
     ports:
-      - "9092:9092"
+      - "9092:9092"     # для контейнеров
+      - "29092:29092"   # для локалки
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
+    networks:
+      - internal
 
   kafka-init:
     image: bitnami/kafka:3.6
@@ -31,10 +38,12 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command: >
       "
-      sleep 20;
-      kafka-topics.sh --create --if-not-exists --bootstrap-server localhost:9092 --topic orchestrator_commands --partitions 1 --replication-factor 1;
-      kafka-topics.sh --create --if-not-exists --bootstrap-server localhost:9092 --topic runner_commands --partitions 1 --replication-factor 1;
+      sleep 14;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic orchestrator_commands --partitions 1 --replication-factor 1;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic runner_commands --partitions 1 --replication-factor 1;
       "
+    networks:
+      - internal
 
   #----------------------------------------------------------------------------------------#
   # SCENARIOS DB
@@ -54,6 +63,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+
+  scenarios-init:
+    image: postgres:15
+    depends_on:
+      scenarios-db:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "
+      sleep 5;
+      psql -h scenarios-db -U postgres -d scenarios -c \"
+        CREATE TABLE IF NOT EXISTS scenarios (
+          scenario_id UUID PRIMARY KEY,
+          video_path TEXT NOT NULL,
+          status TEXT NOT NULL
+        );
+      \"
+      "
+    environment:
+      PGPASSWORD: mysecretpassword
+    networks:
+      - internal
 
 
   #----------------------------------------------------------------------------------------#
@@ -74,7 +107,39 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
+
+  predictions-init:
+    image: postgres:15
+    depends_on:
+      predictions-db:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "
+      sleep 5;
+      psql -h predictions-db -U postgres -d predictions -c \"
+        CREATE TABLE IF NOT EXISTS predictions (
+          scenario_id UUID NOT NULL,
+          frame_number INTEGER NOT NULL,
+          predictions JSONB NOT NULL,
+          PRIMARY KEY (scenario_id, frame_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_predictions_scenario ON predictions(scenario_id);
+      \"
+      "
+    environment:
+      PGPASSWORD: mysecretpassword
+    networks:
+      - internal
 
 volumes:
   scenarios_pgdata:
   predictions_pgdata:
+
+
+networks:
+  internal:
+    name: internal
+    driver: bridge
