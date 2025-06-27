@@ -1,0 +1,44 @@
+C:.
+│   .gitignore
+│   docker-compose.yml
+│   exam.md
+│   my_schema.png
+│   poetry.lock
+│   pyproject.toml
+│   README.md
+│
+├───src
+│   ├───common
+│   │   │   config.py
+│   │   │   __init__.py
+│   │   │
+│   │   ├───db
+│   │   │      predictions.py
+│   │   │      scenarios.py
+│   │   │
+│   │   └───kafka
+│   │         consumer.py
+│   │         init_topics.py
+│   │         producer.py
+│   │
+│   ├───inference
+│   │       inference.py
+│   │       main.py
+│   │       __init__.py
+│   │
+│   ├───orchestrator
+│   │       main.py
+│   │       __init__.py
+│   │
+│   ├───runner
+│   │       main.py
+│   │       __init__.py
+│   │
+│   └───videoanalysis
+│          api.py
+│          main.py
+│          schemas.py
+│          __init__.py
+│
+└───tests
+        __init__.py

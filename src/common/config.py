@@ -1,6 +1,7 @@
 KAFKA_BOOTSTRAP_SERVERS = "localhost:29092" # ПРИ ЗАПУСКЕ С ДОКЕРА НУЖНО ДРУГОЕ!
 KAFKA_ORCHESTRATOR_COMMANDS_TOPIC = "orchestrator_commands"
 KAFKA_RUNNER_COMMANDS_TOPIC = "runner_commands"
+KAFKA_HEARTBEAT_TOPIC = "heartbeat"
 
 POSTGRES_SCENARIOS_SETTINGS = {
     "host": "localhost",
