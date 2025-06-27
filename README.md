@@ -1,6 +1,28 @@
-**working**
-_API —(create scenario)—> Kafka —> Orchestrator —> DB —(check scenario)—> API_
-**pipeline**
+
+
+# Overall structure
+![schema](my_schema.png)
+
+src includes all the services:
+### [videoanalysis](src\videoanalysis) (API)
+* Provides [FastAPI swagger interface](http://localhost:8000/docs) 
+to interact with the project
+* **reads from databases** 
+* **writes orchestrator commands to kafka**
+
+to run
+```shell
+poetry run uvicorn videoanalysis.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### [orchestrator](src\orchestrator)
+(currently)
+* **reads from orchestrator_commands topic**
+* **writes to ScenariosDB directly**
+* **writes to runner_commands topic**
+```shell
+poetry run python src/orchestrator/main.py
+```
 
 # Commands
 

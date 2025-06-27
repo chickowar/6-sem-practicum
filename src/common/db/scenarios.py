@@ -1,21 +1,21 @@
-import psycopg2
+import asyncio
+import asyncpg
 from common.config import POSTGRES_SCENARIOS_SETTINGS
 
-def get_db_connection():
-    return psycopg2.connect(**POSTGRES_SCENARIOS_SETTINGS)
+async def get_db_connection():
+    return await asyncpg.connect(**POSTGRES_SCENARIOS_SETTINGS)
 
-def init_db():
-    conn = get_db_connection()
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS scenarios (
-                    scenario_id UUID PRIMARY KEY,
-                    video_path TEXT NOT NULL,
-                    status TEXT NOT NULL
-                )
-            """)
-    conn.close()
+async def init_db():
+    conn = await get_db_connection()
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS scenarios (
+            scenario_id UUID PRIMARY KEY,
+            video_path TEXT NOT NULL,
+            status TEXT NOT NULL
+        )
+    """)
+    await conn.close()
+    print('scenarios table made')
 
 if __name__ == '__main__':
-    init_db()
+    asyncio.run(init_db())

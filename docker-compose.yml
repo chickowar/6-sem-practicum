@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-
+  #----------------------------------------------------------------------------------------#
+  # KAFKA
   zookeeper:
     image: bitnami/zookeeper:3.9
     container_name: zookeeper
@@ -23,9 +24,23 @@ services:
     depends_on:
       - zookeeper
 
-  postgres:
+  kafka-init:
+    image: bitnami/kafka:3.6
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "
+      sleep 20;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server localhost:9092 --topic orchestrator_commands --partitions 1 --replication-factor 1;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server localhost:9092 --topic runner_commands --partitions 1 --replication-factor 1;
+      "
+
+  #----------------------------------------------------------------------------------------#
+  # SCENARIOS DB
+  scenarios-db:
     image: postgres:15
-    container_name: postgres
+    container_name: scenarios-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
@@ -33,7 +48,27 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - scenarios_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  #----------------------------------------------------------------------------------------#
+  # PREDICTIONS DB
+  predictions-db:
+    image: postgres:15
+    container_name: predictions-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: predictions
+    ports:
+      - "5433:5432"
+    volumes:
+      - predictions_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -41,4 +76,5 @@ services:
       retries: 5
 
 volumes:
-  pgdata:
+  scenarios_pgdata:
+  predictions_pgdata:

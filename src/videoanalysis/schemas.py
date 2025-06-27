@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Dict, Any
 
 # POST /scenario/
 class ScenarioCreateRequest(BaseModel):
@@ -12,3 +13,9 @@ class ScenarioResponse(BaseModel):
     scenario_id: str
     video_path: str
     status: str
+
+
+# GET /prediction/<scenario_id>
+class FramePrediction(BaseModel):
+    frame_number: int
+    predictions: List[Dict[str, Any]]
