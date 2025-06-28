@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 # POST /scenario/
 class ScenarioCreateRequest(BaseModel):
     video_path: str
-class ScenarioCreateResponse(BaseModel):
+class ScenarioChangeResponse(BaseModel):
     scenario_id: str
     status: str
 

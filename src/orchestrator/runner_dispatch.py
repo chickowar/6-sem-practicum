@@ -6,21 +6,41 @@ from orchestrator.commands import runner_command_queue
 
 async def produce_runner_commands():
     producer = await get_producer()
-    # print(f'AWAITED PRODUCER in produce_runner_commands: {producer}')
     conn = await get_db_connection()
     try:
         while True:
-            task = await runner_command_queue.get()
-            scenario_id = task["scenario_id"]
+            command = await runner_command_queue.get()
+            scenario_id = command["scenario_id"]
+            command_type = command.get("command", "start")  # по умолчанию "start"
 
-            await producer.send_and_wait(KAFKA_RUNNER_COMMANDS_TOPIC, json.dumps(task).encode("utf-8"))
-            print(f"[Orchestrator] Sent command to runner: {task}")
+            message = {
+                "scenario_id": scenario_id,
+                "command": command_type
+            }
 
-            await conn.execute("""
-                UPDATE scenarios SET status = $1 WHERE scenario_id = $2
-            """, "in_startup_processing", scenario_id)
+            if command_type == "start":
+                message["video_path"] = command["video_path"]
+                message["start_frame"] = command.get("start_frame", 0)
+
+                await conn.execute("""
+                    UPDATE scenarios SET status = $1 WHERE scenario_id = $2
+                """, "in_startup_processing", scenario_id)
+
+            elif command_type == "stop":
+                await conn.execute("""
+                    UPDATE scenarios SET status = $1 WHERE scenario_id = $2
+                """, "in_shutdown_processing", scenario_id)
+
+            await producer.send_and_wait(
+                KAFKA_RUNNER_COMMANDS_TOPIC,
+                json.dumps(message).encode("utf-8"),
+                key=scenario_id.encode("utf-8")
+            )
+
+            print(f"[Orchestrator] Sent {command_type} command to runner for scenario {scenario_id}")
 
             runner_command_queue.task_done()
+
     finally:
         await shutdown_producer()
         await conn.close()

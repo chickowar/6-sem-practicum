@@ -12,12 +12,14 @@ async def consume_scenario_events():
             scenario_id = data["scenario_id"]
             event = data["event"]
 
-            if event == "scenario_completed":
+            if event == "scenario_completed" or event == "scenario_cancelled":
                 await conn.execute("""
-                    UPDATE scenarios SET status = $1 WHERE scenario_id = $2
-                """, "inactive", scenario_id)
+                                   UPDATE scenarios
+                                   SET status = $1
+                                   WHERE scenario_id = $2
+                                   """, "inactive" if event == "scenario_cancelled" else "scenario_completed", scenario_id)
 
-                print(f"[FSM] Scenario {scenario_id} -> inactive (completed by {data['runner_id']})")
+                print(f"[FSM] Scenario {scenario_id} -> inactive ({event} by {data['runner_id']})")
 
     finally:
         await consumer.stop()

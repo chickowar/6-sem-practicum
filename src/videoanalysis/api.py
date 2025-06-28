@@ -7,7 +7,7 @@ import uuid, json
 from typing import List
 from videoanalysis.schemas import (
     ScenarioCreateRequest,
-    ScenarioCreateResponse,
+    ScenarioChangeResponse,
     ScenarioResponse,
     FramePrediction
 )
@@ -54,8 +54,8 @@ async def get_predictions(scenario_id: str) -> List[FramePrediction] | None:
         await conn.close()
 
 
-@router.post("/scenario/", response_model=ScenarioCreateResponse)
-async def create_scenario(req: ScenarioCreateRequest) -> ScenarioCreateResponse:
+@router.post("/scenario/", response_model=ScenarioChangeResponse)
+async def create_scenario(req: ScenarioCreateRequest) -> ScenarioChangeResponse:
     scenario_id = str(uuid.uuid4())
 
     payload = json.dumps({
@@ -67,7 +67,22 @@ async def create_scenario(req: ScenarioCreateRequest) -> ScenarioCreateResponse:
     producer = await get_producer()
     await producer.send_and_wait(KAFKA_ORCHESTRATOR_COMMANDS_TOPIC, payload)
 
-    return ScenarioCreateResponse(
+    return ScenarioChangeResponse(
         scenario_id=scenario_id,
         status="pending"
-    ) # стоит ли реально отсылать ending, если мы даже не знаем дошло ли до оркестратора????
+    )
+
+@router.post("/scenario/{scenario_id}", response_model=ScenarioChangeResponse)
+async def shutdown_scenario(scenario_id: str) -> ScenarioChangeResponse:
+    payload = json.dumps({
+        "scenario_id": scenario_id,
+        "status": "init_shutdown"
+    }).encode()
+
+    producer = await get_producer()
+    await producer.send_and_wait(KAFKA_ORCHESTRATOR_COMMANDS_TOPIC, payload)
+
+    return ScenarioChangeResponse(
+        scenario_id=scenario_id,
+        status="shutdown_initiated"
+    )

@@ -16,7 +16,7 @@ async def heartbeat_monitor():
             rows = await conn.fetch("""
                 SELECT scenario_id, status, video_path
                 FROM scenarios
-                WHERE status NOT IN ('completed', 'inactive')
+                WHERE status NOT IN ('completed', 'inactive', 'init_shutdown')
             """)
 
             for row in rows:
