@@ -40,7 +40,7 @@ services:
       "
       sleep 17;
       kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic orchestrator_commands --partitions 1 --replication-factor 1;
-      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic runner_commands --partitions 1 --replication-factor 1;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic runner_commands --partitions 3 --replication-factor 1;
       kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic heartbeat --partitions 1 --replication-factor 1;
       "
     networks:
@@ -135,10 +135,48 @@ services:
     networks:
       - internal
 
+
+  # RUNNERS
+  runner-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: runner-1
+    environment:
+      - RUNNER_ID=runner-1
+    depends_on:
+      - kafka
+    networks:
+      - internal
+
+  runner-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: runner-2
+    environment:
+      - RUNNER_ID=runner-2
+    depends_on:
+      - kafka
+    networks:
+      - internal
+
+  runner-3:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+    container_name: runner-3
+    environment:
+      - RUNNER_ID=runner-3
+    depends_on:
+      - kafka
+    networks:
+      - internal
+
+
 volumes:
   scenarios_pgdata:
   predictions_pgdata:
-
 
 networks:
   internal:

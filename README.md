@@ -1,4 +1,4 @@
-runners take each other's jobs (hopefully)
+3 runners interchangeable, no inactive state yet
 
 # Overall structure
 ![schema](my_schema.png)
@@ -17,7 +17,11 @@ poetry run uvicorn videoanalysis.main:app --reload --host 0.0.0.0 --port 8000
 
 ### [orchestrator](src\orchestrator)
 (currently)
+* resends runner_command if heartbeats from a scenario stops, 
+thus providing отказоустойчивость (забыл как это на англ)
+* currently does not set the state of a scenario to inactive, so basically works all the time
 * **reads from orchestrator_commands topic**
+* **reads from heartbeat**
 * **writes to ScenariosDB directly**
 * **writes to runner_commands topic**
 ```shell
@@ -32,17 +36,20 @@ writes random stuff to PredictionsDB without even
 having any video to sample frames from
 * **reads from runner_commands topic**
 * **writes to PredictionsDB directly**
+* **writes heartbeats to heartbeat topic**
 ```shell
 poetry run python src/runner/main.py
 ```
+or 3 of them are initialized in Docker
 
 ## Current state
 ### topics:
 * runner_commands
 * orchestrator_commands
+* heartbeat
 
 ### services:
-* runner
+* runners
 * orchestrator
 * api (3 working handlers)
 
@@ -87,10 +94,13 @@ poetry run python src/orchestrator/main.py
 
 ---
 
-### 5) Set up Runner
-```shell
-poetry run python src/orchestrator/main.py
-```
+[//]: # (### 5&#41; Set up Runner)
+
+[//]: # (```shell)
+
+[//]: # (poetry run python src/orchestrator/main.py)
+
+[//]: # (```)
 
 ---
 
@@ -101,7 +111,9 @@ poetry run python src/orchestrator/main.py
 ## don't forget
 * сейчас есть беда с тем, что если у нас каким-то хером раннеры пропустят сообщение 
 о начале сценария, то оркестратор просто бесконечно будет ждать, пока его кто-то подберёт, 
-и притом не думаю, что это обязательно произойдёт... 
-* env files to properly manage all the ports and stuff
+и притом не думаю, что это обязательно произойдёт...
+* наверное стоит делать ретраи по сценарию, раз в минуту хотя бы. 
+А то щас я ретраю, только если раннер сломался после того как обработал хоть один кадр. А вдруг он сразу сломается и притом у нас не будет 
+обработан ни один кадр, а оркестратор будет думать, что сценарий просто в очереди
 * deployment on docker for services (at least runner and inference for scallability)
 * outbox

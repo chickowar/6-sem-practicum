@@ -1,0 +1,6 @@
+numpy
+fastapi
+aiokafka
+psycopg2
+uvicorn[standard]
+asyncpg
