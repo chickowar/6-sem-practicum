@@ -38,9 +38,10 @@ services:
     entrypoint: ["/bin/bash", "-c"]
     command: >
       "
-      sleep 14;
+      sleep 17;
       kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic orchestrator_commands --partitions 1 --replication-factor 1;
       kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic runner_commands --partitions 1 --replication-factor 1;
+      kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic heartbeat --partitions 1 --replication-factor 1;
       "
     networks:
       - internal

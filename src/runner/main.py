@@ -5,7 +5,7 @@ import random
 import time
 from typing import Optional
 
-from common.kafka.consumer import get_consumer, shutdown_consumer
+from common.kafka.consumer import get_consumer
 from common.kafka.producer import get_producer, shutdown_producer
 from common.db.predictions import get_db_connection
 from common.config import (
@@ -23,7 +23,6 @@ RUNNER_ID = os.getenv("RUNNER_ID", "runner-1")
 
 # Shared state between frame processor and heartbeat
 frame_number_shared: Optional[int] = None
-frame_updated = asyncio.Event()
 
 
 async def mock_predict():
@@ -47,8 +46,7 @@ async def heartbeat_loop(scenario_id: str):
 
     try:
         while True:
-            await frame_updated.wait()
-            frame_updated.clear()
+            await asyncio.sleep(5)
 
             if frame_number_shared is None:
                 continue
@@ -72,15 +70,16 @@ async def handle_scenario(data: dict):
 
     scenario_id = data["scenario_id"]
     video_path = data["video_path"]
+    start_frame = data.get("start_frame", 0)
 
-    print(f"[{RUNNER_ID}] Started scenario {scenario_id} (video: {video_path})")
+    print(f"[{RUNNER_ID}] Started scenario {scenario_id} (video: {video_path}) from frame {start_frame}")
 
     conn = await get_db_connection()
     heartbeat_task = asyncio.create_task(heartbeat_loop(scenario_id))
 
     try:
-        for frame_number in range(10):
-            await asyncio.sleep(2)  # Mock inference delay
+        for frame_number in range(start_frame, 15): # TODO: 15 здесь - это последний кадр должен быть
+            await asyncio.sleep(3)  # Mock inference delay
             mock_result = [await mock_predict()]
 
             await conn.execute("""
@@ -90,7 +89,6 @@ async def handle_scenario(data: dict):
             """, scenario_id, frame_number, json.dumps(mock_result))
 
             frame_number_shared = frame_number
-            frame_updated.set()
 
             print(f"[{RUNNER_ID}] Frame {frame_number} written for scenario {scenario_id}")
     finally:
@@ -107,7 +105,7 @@ async def consume_loop():
             data = json.loads(msg.value.decode())
             await handle_scenario(data)
     finally:
-        await shutdown_consumer()
+        await consumer.stop()
 
 
 async def main():

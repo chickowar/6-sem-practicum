@@ -1,4 +1,4 @@
-asyncpg, orch->rnr->PrDB with mocked frames and ml
+runners take each other's jobs (hopefully)
 
 # Overall structure
 ![schema](my_schema.png)
@@ -54,7 +54,7 @@ poetry run python src/runner/main.py
 ### 0)
 if u have internal network in docker, delete it. And pro-tip - use docker compose down -v to destroy volumes
 
-### 1) Managing dependencies
+### 1) Installing dependencies
 ```shell 
 poetry install
 ```
@@ -99,7 +99,9 @@ poetry run python src/orchestrator/main.py
 
 
 ## don't forget
-* heartbeats
+* сейчас есть беда с тем, что если у нас каким-то хером раннеры пропустят сообщение 
+о начале сценария, то оркестратор просто бесконечно будет ждать, пока его кто-то подберёт, 
+и притом не думаю, что это обязательно произойдёт... 
 * env files to properly manage all the ports and stuff
 * deployment on docker for services (at least runner and inference for scallability)
 * outbox
