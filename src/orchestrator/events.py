@@ -24,7 +24,7 @@ async def consume_scenario_events():
                 print(
                     f"[FSM] Scenario {scenario_id} -> {'inactive' if event == 'scenario_cancelled' else 'scenario_completed'} "
                     f"({event} by {data['runner_id']})")
-                del last_heartbeat[str(scenario_id)]
+                last_heartbeat.pop(str(scenario_id))
                 print(f"[FSM] Deleted {scenario_id} heartbeat")
 
 

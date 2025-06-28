@@ -41,7 +41,7 @@ async def consume_orchestrator_commands():
 
                 print(f"[FSM] Scenario {scenario_id} -> init_shutdown")
 
-                del last_heartbeat[str(scenario_id)]
+                last_heartbeat.pop(str(scenario_id))
 
                 print(f"[FSM] Deleted {scenario_id} heartbeat")
 

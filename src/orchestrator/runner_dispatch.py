@@ -27,7 +27,6 @@ async def produce_runner_commands():
                     UPDATE scenarios SET status = $1 WHERE scenario_id = $2
                 """, "in_startup_processing", scenario_id)
 
-                # Отправляем обычным способом — с key
                 await producer.send_and_wait(
                     KAFKA_RUNNER_COMMANDS_TOPIC,
                     json.dumps(message).encode("utf-8"),
@@ -41,17 +40,30 @@ async def produce_runner_commands():
                     UPDATE scenarios SET status = $1 WHERE scenario_id = $2
                 """, "in_shutdown_processing", scenario_id)
 
-                metadata = await producer.client.fetch_all_metadata()
-                topic_partitions = [
-                    p.partition for p in metadata.topics[KAFKA_RUNNER_COMMANDS_TOPIC].partitions
-                ]
+                # metadata = await producer.client.fetch_all_metadata()
+                #
+                # if KAFKA_RUNNER_COMMANDS_TOPIC not in metadata.topics:
+                #     print(f"[ERROR] Topic {KAFKA_RUNNER_COMMANDS_TOPIC} not found in metadata")
+                #     runner_command_queue.task_done()
+                #     continue
+                #
+                # topic_metadata = metadata.topics[KAFKA_RUNNER_COMMANDS_TOPIC]
+                # topic_partitions = list(topic_metadata.partitions.keys())
+                # print(metadata, metadata.__dir__())
+                #
+                # for partition in topic_partitions:
+                #     await producer.send_and_wait(
+                #         KAFKA_RUNNER_COMMANDS_TOPIC,
+                #         json.dumps(message).encode("utf-8"),
+                #         partition=partition
+                #     )
 
-                for partition in topic_partitions:
-                    await producer.send_and_wait(
-                        KAFKA_RUNNER_COMMANDS_TOPIC,
-                        json.dumps(message).encode("utf-8"),
-                        partition=partition
-                    )
+                await producer.send_and_wait(
+                    KAFKA_RUNNER_COMMANDS_TOPIC,
+                    json.dumps(message).encode("utf-8"),
+                    key=scenario_id.encode("utf-8")
+                )
+
                 print(f"[Orchestrator] Sent stop command to ALL partitions for scenario {scenario_id}")
 
             runner_command_queue.task_done()
