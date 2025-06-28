@@ -9,6 +9,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV PYTHONPATH=/app/src
+ENV PYTHONUNBUFFERED=1
 ENV KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 ENV POSTGRES_SCENARIOS_HOST=scenarios-db
 ENV POSTGRES_PREDICTIONS_HOST=predictions-db
