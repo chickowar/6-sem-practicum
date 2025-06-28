@@ -1,11 +1,13 @@
 C:.
 │   .gitignore
 │   docker-compose.yml
+│   Dockerfile.runner
 │   exam.md
 │   my_schema.png
 │   poetry.lock
 │   pyproject.toml
 │   README.md
+│   requirements.txt
 │
 ├───src
 │   ├───common
@@ -16,9 +18,8 @@ C:.
 │   │   │      predictions.py
 │   │   │      scenarios.py
 │   │   │
-│   │   └───kafka
+│   │   ├───kafka
 │   │         consumer.py
-│   │         init_topics.py
 │   │         producer.py
 │   │
 │   ├───inference
@@ -27,8 +28,12 @@ C:.
 │   │       __init__.py
 │   │
 │   ├───orchestrator
-│   │       main.py
-│   │       __init__.py
+│   │      commands.py
+│   │      heartbeats.py
+│   │      main.py
+│   │      monitor.py
+│   │      runner_dispatch.py
+│   │      __init__.py
 │   │
 │   ├───runner
 │   │       main.py
@@ -39,6 +44,7 @@ C:.
 │          main.py
 │          schemas.py
 │          __init__.py
+
 │
 └───tests
         __init__.py

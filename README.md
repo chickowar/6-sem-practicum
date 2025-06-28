@@ -1,4 +1,4 @@
-3 runners interchangeable, no inactive state yet
+сделал конец процесса, всё работает, раннеры подхватывают свои работы, ура
 
 # Overall structure
 ![schema](my_schema.png)
@@ -102,7 +102,7 @@ poetry run python src/orchestrator/main.py
 
 [//]: # (```)
 
----
+[//]: # (---)
 
 
 

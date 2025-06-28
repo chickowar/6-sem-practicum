@@ -60,7 +60,8 @@ async def create_scenario(req: ScenarioCreateRequest) -> ScenarioCreateResponse:
 
     payload = json.dumps({
         "scenario_id": scenario_id,
-        "video_path": req.video_path
+        "video_path": req.video_path,
+        "status": "init_startup"
     }).encode()
 
     producer = await get_producer()

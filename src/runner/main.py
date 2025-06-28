@@ -10,7 +10,7 @@ from common.kafka.producer import get_producer, shutdown_producer
 from common.db.predictions import get_db_connection
 from common.config import (
     KAFKA_RUNNER_COMMANDS_TOPIC,
-    KAFKA_HEARTBEAT_TOPIC,
+    KAFKA_HEARTBEAT_TOPIC, KAFKA_SCENARIO_EVENTS_TOPIC,
 )
 
 MOCK = [
@@ -91,6 +91,18 @@ async def handle_scenario(data: dict):
             frame_number_shared = frame_number
 
             print(f"[{RUNNER_ID}] Frame {frame_number} written for scenario {scenario_id}")
+        else:
+            producer = await get_producer()
+
+            end_message = {
+                "scenario_id": scenario_id,
+                "runner_id": RUNNER_ID,
+                "event": "scenario_completed",
+                "timestamp": time.time()
+            }
+
+            await producer.send_and_wait(KAFKA_SCENARIO_EVENTS_TOPIC, json.dumps(end_message).encode("utf-8"))
+            print(f"[{RUNNER_ID}] Sent scenario_completed event for scenario {scenario_id}")
     finally:
         heartbeat_task.cancel()
         await asyncio.gather(heartbeat_task, return_exceptions=True)
@@ -109,7 +121,10 @@ async def consume_loop():
 
 
 async def main():
-    await consume_loop()
+    try:
+        await consume_loop()
+    finally:
+        await shutdown_producer()
 
 
 if __name__ == "__main__":
