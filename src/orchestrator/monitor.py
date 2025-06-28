@@ -4,7 +4,7 @@ from common.db.scenarios import get_db_connection
 from orchestrator.commands import runner_command_queue
 from orchestrator.heartbeats import last_heartbeat
 
-HEARTBEAT_TIMEOUT = 10
+HEARTBEAT_TIMEOUT = 20
 
 async def heartbeat_monitor():
     conn = await get_db_connection()

@@ -4,6 +4,7 @@ from common.kafka.producer import get_producer, shutdown_producer
 from common.config import KAFKA_RUNNER_COMMANDS_TOPIC
 from orchestrator.commands import runner_command_queue
 
+
 async def produce_runner_commands():
     producer = await get_producer()
     conn = await get_db_connection()
@@ -11,7 +12,7 @@ async def produce_runner_commands():
         while True:
             command = await runner_command_queue.get()
             scenario_id = command["scenario_id"]
-            command_type = command.get("command", "start")  # по умолчанию "start"
+            command_type = command.get("command", "start")
 
             message = {
                 "scenario_id": scenario_id,
@@ -26,18 +27,32 @@ async def produce_runner_commands():
                     UPDATE scenarios SET status = $1 WHERE scenario_id = $2
                 """, "in_startup_processing", scenario_id)
 
+                # Отправляем обычным способом — с key
+                await producer.send_and_wait(
+                    KAFKA_RUNNER_COMMANDS_TOPIC,
+                    json.dumps(message).encode("utf-8"),
+                    key=scenario_id.encode("utf-8")
+                )
+
+                print(f"[Orchestrator] Sent start command to runner for scenario {scenario_id}")
+
             elif command_type == "stop":
                 await conn.execute("""
                     UPDATE scenarios SET status = $1 WHERE scenario_id = $2
                 """, "in_shutdown_processing", scenario_id)
 
-            await producer.send_and_wait(
-                KAFKA_RUNNER_COMMANDS_TOPIC,
-                json.dumps(message).encode("utf-8"),
-                key=scenario_id.encode("utf-8")
-            )
+                metadata = await producer.client.fetch_all_metadata()
+                topic_partitions = [
+                    p.partition for p in metadata.topics[KAFKA_RUNNER_COMMANDS_TOPIC].partitions
+                ]
 
-            print(f"[Orchestrator] Sent {command_type} command to runner for scenario {scenario_id}")
+                for partition in topic_partitions:
+                    await producer.send_and_wait(
+                        KAFKA_RUNNER_COMMANDS_TOPIC,
+                        json.dumps(message).encode("utf-8"),
+                        partition=partition
+                    )
+                print(f"[Orchestrator] Sent stop command to ALL partitions for scenario {scenario_id}")
 
             runner_command_queue.task_done()
 

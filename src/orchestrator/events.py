@@ -2,6 +2,8 @@ import json
 from common.db.scenarios import get_db_connection
 from common.kafka.consumer import get_consumer
 from common.config import KAFKA_SCENARIO_EVENTS_TOPIC
+from orchestrator.heartbeats import last_heartbeat
+
 
 async def consume_scenario_events():
     consumer = await get_consumer(KAFKA_SCENARIO_EVENTS_TOPIC, group_id="orchestrator-events-group")
@@ -19,7 +21,12 @@ async def consume_scenario_events():
                                    WHERE scenario_id = $2
                                    """, "inactive" if event == "scenario_cancelled" else "scenario_completed", scenario_id)
 
-                print(f"[FSM] Scenario {scenario_id} -> inactive ({event} by {data['runner_id']})")
+                print(
+                    f"[FSM] Scenario {scenario_id} -> {'inactive' if event == 'scenario_cancelled' else 'scenario_completed'} "
+                    f"({event} by {data['runner_id']})")
+                del last_heartbeat[str(scenario_id)]
+                print(f"[FSM] Deleted {scenario_id} heartbeat")
+
 
     finally:
         await consumer.stop()

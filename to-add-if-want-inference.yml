@@ -1,0 +1,28 @@
+#in kafka-init
+kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic frames --partitions 3 --replication-factor 1;
+
+services:
+  inference-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.inference
+    container_name: inference-1
+    environment:
+      - INFERENCE_ID=inference-1
+    depends_on:
+      - kafka
+    networks:
+      - internal
+
+  inference-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.inference
+    container_name: inference-2
+    environment:
+      - INFERENCE_ID=inference-2
+    depends_on:
+      - kafka
+    networks:
+      - internal
+

@@ -57,7 +57,7 @@ async def get_predictions(scenario_id: str) -> List[FramePrediction] | None:
 @router.post("/scenario/", response_model=ScenarioChangeResponse)
 async def create_scenario(req: ScenarioCreateRequest) -> ScenarioChangeResponse:
     scenario_id = str(uuid.uuid4())
-
+    print("scenario_id: {}".format(scenario_id))
     payload = json.dumps({
         "scenario_id": scenario_id,
         "video_path": req.video_path,
@@ -65,6 +65,7 @@ async def create_scenario(req: ScenarioCreateRequest) -> ScenarioChangeResponse:
     }).encode()
 
     producer = await get_producer()
+    print("awaited producer: {}".format(producer))
     await producer.send_and_wait(KAFKA_ORCHESTRATOR_COMMANDS_TOPIC, payload)
 
     return ScenarioChangeResponse(

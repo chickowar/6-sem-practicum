@@ -43,6 +43,8 @@ async def consume_orchestrator_commands():
 
                 del last_heartbeat[str(scenario_id)]
 
+                print(f"[FSM] Deleted {scenario_id} heartbeat")
+
                 await runner_command_queue.put({
                     "scenario_id": scenario_id,
                     "command": "stop"
